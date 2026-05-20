@@ -47,6 +47,26 @@ npm start           # run the keygen in dev mode
 
 ---
 
+## Auto-update (GitHub Releases)
+
+On every launch Lumio checks **github.com/muradcse1177/lumio** for a newer
+release, downloads it silently, and shows a "Restart to install" prompt.
+
+**To publish an update:**
+1. Bump `"version"` in `package.json` (e.g. `1.0.1`)
+2. `npm run dist` — produces in `dist/`:
+   `Lumio-Setup-X.X.X.exe`, `Lumio-Setup-X.X.X.exe.blockmap`, `latest.yml`
+3. Create a GitHub release with all three files:
+   ```bash
+   gh release create vX.X.X dist/Lumio-Setup-X.X.X.exe dist/Lumio-Setup-X.X.X.exe.blockmap dist/latest.yml --title "Lumio vX.X.X"
+   ```
+   (or `npm run release` — auto-uploads, needs a `GH_TOKEN` env var)
+4. Every installed Lumio picks up the update automatically on next launch.
+
+> All three files are required — `latest.yml` is the manifest the updater reads.
+
+---
+
 ## How the license works (offline challenge–response, no server)
 
 ```
