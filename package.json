@@ -1,0 +1,83 @@
+{
+  "name": "lumio",
+  "productName": "Lumio",
+  "version": "1.0.0",
+  "description": "Lumio — professional video effects studio with 96 cinematic effects",
+  "author": "Tech Designer (https://techdesigner.net)",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "keygen": "electron tools/keygen",
+    "dist": "electron-builder --win",
+    "release": "electron-builder --win --publish always",
+    "pack": "electron-builder --dir"
+  },
+  "build": {
+    "appId": "net.techdesigner.lumio",
+    "productName": "Lumio",
+    "copyright": "Copyright © 2026 Tech Designer — techdesigner.net",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "muradcse1177",
+        "repo": "lumio"
+      }
+    ],
+    "compression": "maximum",
+    "electronLanguages": [
+      "en-US"
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/ffmpeg",
+        "to": "ffmpeg"
+      },
+      {
+        "from": "resources/aud",
+        "to": "aud"
+      },
+      {
+        "from": "resources/presets.json",
+        "to": "presets.json"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Lumio",
+      "uninstallDisplayName": "Lumio ${version}",
+      "artifactName": "Lumio-Setup-${version}.${ext}"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.3"
+  }
+}

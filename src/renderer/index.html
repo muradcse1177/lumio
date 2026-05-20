@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; script-src 'self';" />
+<title>Lumio</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="app">
+  <!-- ===================== title bar ===================== -->
+  <div class="titlebar">
+    <div class="tb-logo">N</div>
+    <div class="tb-title">Lumio</div>
+    <div class="tb-ver" id="verTag">v1.0.0</div>
+    <div class="tb-spacer"></div>
+    <div class="tb-btns">
+      <button class="tb-btn" id="aboutBtn" title="About">&#9432;</button>
+      <button class="tb-btn" id="winMin" title="Minimize">&#8211;</button>
+      <button class="tb-btn" id="winMax" title="Maximize">&#9744;</button>
+      <button class="tb-btn close" id="winClose" title="Close">&#10005;</button>
+    </div>
+  </div>
+
+  <div class="workspace">
+    <!-- ===================== sidebar ===================== -->
+    <aside class="sidebar">
+      <div>
+        <div class="side-title">🎬 Source Video</div>
+        <div class="dropzone" id="dropzone">
+          <div class="ico">⬆️</div>
+          <div class="t1">Upload Video</div>
+          <div class="t2">Click or drag a video file here</div>
+        </div>
+        <div class="video-card" id="videoCard">
+          <img class="vc-thumb" id="vcThumb" alt="" />
+          <div class="vc-name" id="vcName"></div>
+          <div class="vc-meta" id="vcMeta"></div>
+          <button class="link-change" id="changeVideo">↻ Choose a different video</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="side-title">📁 Output Folder</div>
+        <div class="out-row">
+          <div class="out-path" id="outPath">Not selected yet</div>
+          <button class="mini" id="pickOut">Browse</button>
+        </div>
+      </div>
+
+      <div class="side-foot">
+        <div class="panel">
+          <div class="gpu-row">
+            <span class="gpu-dot" id="gpuDot"></span>
+            <span id="gpuLabel">Detecting GPU…</span>
+          </div>
+          <div class="lic-row">
+            <span>License</span>
+            <b id="licInfo">—</b>
+          </div>
+        </div>
+        <div class="credit">
+          © 2026 <a href="#" id="tdCredit">Tech Designer</a><br>techdesigner.net
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===================== content ===================== -->
+    <main class="content">
+      <div class="content-head">
+        <div class="ch-title">Effects <span id="fxCount"></span></div>
+        <div class="search">
+          <span class="si">🔍</span>
+          <input type="text" id="search" placeholder="Search effects…" spellcheck="false" />
+        </div>
+      </div>
+
+      <div class="toolbar" id="filters">
+        <button class="filter active" data-f="all">All</button>
+        <button class="filter" data-f="REPEAT">Repeat</button>
+        <button class="filter" data-f="PRELOAD">Preload</button>
+        <button class="filter" data-f="METHOD">Method</button>
+        <button class="filter" data-f="TRANSFORM">Transform</button>
+        <div class="sp"></div>
+        <button class="sel-link" id="selectAll">Select All</button>
+        <button class="sel-link" id="clearSel">Clear</button>
+      </div>
+
+      <div class="grid-scroll">
+        <div class="grid" id="grid"></div>
+        <div class="grid-empty" id="gridEmpty" style="display:none;">
+          No effects found.
+        </div>
+      </div>
+
+      <div class="actionbar">
+        <div class="ab-info">
+          <b id="selCount">0</b> effects selected
+          <div class="sub" id="selSub">Select a video and effects to render</div>
+        </div>
+        <div class="sp"></div>
+        <button class="btn btn-amber btn-render" id="renderBtn" disabled>🚀 Start Render</button>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ===================== render overlay ===================== -->
+<div class="overlay" id="renderOverlay">
+  <div class="render-modal">
+    <div class="rm-head">
+      <h2 id="rmTitle">Rendering…</h2>
+      <div class="rm-sub" id="rmSub"></div>
+    </div>
+    <div class="rm-overall">
+      <div class="rm-bar"><i id="rmBar"></i></div>
+      <div class="rm-stat">
+        <span id="rmDone">0 / 0 done</span>
+        <span id="rmPct">0%</span>
+      </div>
+    </div>
+    <div class="rm-list" id="rmList"></div>
+    <div class="rm-foot">
+      <div class="rm-result" id="rmResult"></div>
+      <div class="sp"></div>
+      <button class="btn btn-ghost" id="openOutBtn" style="display:none;">📂 Open Output</button>
+      <button class="btn btn-danger" id="cancelBtn">⛔ Cancel</button>
+      <button class="btn btn-navy" id="closeRmBtn" style="display:none;">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== about modal ===================== -->
+<div class="overlay" id="aboutOverlay">
+  <div class="about-card">
+    <div class="ac-top">
+      <div class="ac-logo">N</div>
+      <div style="font-size:18px;font-weight:800;">Lumio</div>
+      <div style="font-size:12px;opacity:.7;margin-top:3px;" id="aboutVer"></div>
+    </div>
+    <div class="ac-body" id="aboutBody"></div>
+    <button class="btn btn-navy ac-close" id="closeAbout">Close</button>
+  </div>
+</div>
+
+<!-- ===================== auto-update banner ===================== -->
+<div class="upd-banner" id="updBanner">
+  <div class="upd-ico" id="updIco">⬇</div>
+  <div class="upd-info">
+    <div class="upd-title" id="updTitle"></div>
+    <div class="upd-sub" id="updSub"></div>
+  </div>
+  <button class="upd-btn" id="updBtn" style="display:none;">Restart</button>
+  <button class="upd-x" id="updClose" title="Dismiss">✕</button>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="app.js"></script>
+<script src="update.js"></script>
+</body>
+</html>

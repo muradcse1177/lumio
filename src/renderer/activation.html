@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; script-src 'self';" />
+<title>Lumio — Activation</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="app">
+  <!-- title bar -->
+  <div class="titlebar">
+    <div class="tb-logo">N</div>
+    <div class="tb-title">Lumio</div>
+    <div class="tb-ver" id="verTag">v1.0.0</div>
+    <div class="tb-spacer"></div>
+    <div class="tb-btns">
+      <button class="tb-btn" id="winMin" title="Minimize">&#8211;</button>
+      <button class="tb-btn close" id="winClose" title="Close">&#10005;</button>
+    </div>
+  </div>
+
+  <div class="act-stage">
+    <div class="act-card">
+      <div class="act-head">
+        <div class="act-badge">N</div>
+        <h1>Lumio</h1>
+        <p id="headSub">License activation required</p>
+      </div>
+
+      <div class="act-banner warn" id="banner" style="display:none;">
+        <span id="bannerIcon">⚠</span><span id="bannerText"></span>
+      </div>
+
+      <div class="act-body">
+        <div class="act-step">
+          <div class="lbl"><span class="n">1</span> Your Request Code</div>
+          <div class="desc">
+            Copy the Request Code below and send it to the admin. The admin
+            will give you an Activation Code that works <b>only on this
+            computer</b>.
+          </div>
+          <div class="req-row">
+            <div class="req-code" id="reqCode">Loading…</div>
+            <button class="btn btn-navy" id="copyReq" title="Copy">📋</button>
+          </div>
+        </div>
+
+        <div class="act-step">
+          <div class="lbl"><span class="n">2</span> Enter Activation Code</div>
+          <div class="desc">Paste the Activation Code you received from the admin.</div>
+          <textarea class="ac-input" id="acInput" spellcheck="false"
+            placeholder="Paste your Activation Code here…"></textarea>
+          <div class="act-msg" id="msg"></div>
+        </div>
+      </div>
+
+      <div class="act-actions">
+        <button class="btn btn-amber" id="activateBtn">🔓 Activate License</button>
+      </div>
+    </div>
+
+    <div class="tiny-note">🔒 Fully offline — no internet required, no data ever leaves your computer</div>
+    <div class="act-foot">
+      Powered by <a href="#" id="tdLink">Tech Designer</a> — techdesigner.net
+    </div>
+  </div>
+</div>
+
+<div class="upd-banner" id="updBanner">
+  <div class="upd-ico" id="updIco">⬇</div>
+  <div class="upd-info">
+    <div class="upd-title" id="updTitle"></div>
+    <div class="upd-sub" id="updSub"></div>
+  </div>
+  <button class="upd-btn" id="updBtn" style="display:none;">Restart</button>
+  <button class="upd-x" id="updClose" title="Dismiss">✕</button>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="activation.js"></script>
+<script src="update.js"></script>
+</body>
+</html>

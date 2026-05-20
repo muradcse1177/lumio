@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline';" />
+<title>Lumio Keygen</title>
+<style>
+  :root {
+    --navy:#04107C; --navy-2:#0a1a9e; --amber:#f59e0b; --amber-2:#fbbf24;
+    --ink:#0c1230; --muted:#64708f; --line:#e3e7f3; --bg:#f4f6fc;
+    --ok:#16a34a; --err:#dc2626;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family:'Segoe UI',Tahoma,sans-serif; background:var(--bg); color:var(--ink);
+    -webkit-user-select:none; overflow-x:hidden;
+  }
+  .topbar {
+    background:linear-gradient(135deg,var(--navy),var(--navy-2));
+    color:#fff; padding:16px 26px; display:flex; align-items:center; gap:14px;
+  }
+  .logo {
+    width:40px; height:40px; border-radius:11px; flex:none;
+    background:linear-gradient(135deg,var(--amber),var(--amber-2));
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:21px; color:var(--navy);
+  }
+  .topbar h1 { font-size:17px; font-weight:700; letter-spacing:.3px; }
+  .topbar .sub { font-size:11.5px; opacity:.7; margin-top:2px; }
+  .admin-tag {
+    margin-left:auto; background:rgba(245,158,11,.18); color:var(--amber-2);
+    border:1px solid rgba(245,158,11,.4); padding:5px 12px; border-radius:20px;
+    font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px;
+  }
+  .wrap { padding:22px 26px 10px; max-width:880px; margin:0 auto; }
+  .card {
+    background:#fff; border:1px solid var(--line); border-radius:15px;
+    padding:18px 20px; margin-bottom:16px; box-shadow:0 6px 22px rgba(12,18,48,.05);
+  }
+  .step { display:flex; align-items:center; gap:10px; margin-bottom:13px; }
+  .step .num {
+    width:25px; height:25px; border-radius:50%; background:var(--navy); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex:none;
+  }
+  .step h2 { font-size:15px; font-weight:700; }
+  label.hint { font-size:12px; color:var(--muted); display:block; margin-bottom:6px; }
+  textarea, input.txt {
+    width:100%; border:1.5px solid var(--line); border-radius:10px; padding:11px 13px;
+    font-size:13.5px; color:var(--ink); outline:none; transition:border-color .15s;
+    font-family:'Consolas',monospace; letter-spacing:.7px;
+  }
+  textarea { resize:vertical; min-height:64px; }
+  input.txt { font-family:'Segoe UI',sans-serif; letter-spacing:0; }
+  textarea:focus, input.txt:focus { border-color:var(--navy); }
+  .field { margin-top:11px; }
+  .tiers { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  .tier {
+    border:1.5px solid var(--line); border-radius:11px; padding:13px 8px; text-align:center;
+    cursor:pointer; transition:all .15s; background:#fff;
+  }
+  .tier:hover { border-color:var(--amber); }
+  .tier.active {
+    border-color:var(--navy); background:linear-gradient(135deg,var(--navy),var(--navy-2)); color:#fff;
+  }
+  .tier .t-name { font-size:13.5px; font-weight:700; }
+  .tier .t-days { font-size:11px; color:var(--muted); margin-top:3px; }
+  .tier.active .t-days { color:rgba(255,255,255,.7); }
+  .btn {
+    border:none; border-radius:10px; padding:12px 20px; font-size:13.5px; font-weight:700;
+    cursor:pointer; transition:transform .08s, box-shadow .15s; font-family:inherit;
+  }
+  .btn:active { transform:translateY(1px); }
+  .btn-primary {
+    background:linear-gradient(135deg,var(--amber),var(--amber-2)); color:var(--navy);
+    width:100%; box-shadow:0 6px 16px rgba(245,158,11,.32);
+  }
+  .btn-primary:disabled { opacity:.5; cursor:not-allowed; box-shadow:none; }
+  .btn-ghost { background:var(--navy); color:#fff; padding:8px 14px; font-size:12px; }
+  .result { display:none; margin-top:14px; }
+  .result.show { display:block; }
+  .result-head {
+    display:flex; align-items:center; gap:8px; margin-bottom:10px;
+    color:var(--ok); font-weight:700; font-size:13.5px;
+  }
+  .code-box {
+    background:linear-gradient(135deg,#071056,#0a1a9e); border-radius:12px;
+    padding:15px; color:#fff;
+  }
+  .code-box .ac {
+    font-family:'Consolas',monospace; font-size:13px; line-height:1.7;
+    word-break:break-all; letter-spacing:.5px; -webkit-user-select:all; user-select:all;
+  }
+  .meta { display:flex; flex-wrap:wrap; gap:7px 18px; margin-top:12px; }
+  .meta div { font-size:12px; }
+  .meta span { color:var(--muted); }
+  .meta b { color:var(--ink); }
+  .row { display:flex; gap:10px; margin-top:12px; align-items:center; }
+  .err {
+    display:none; background:#fef2f2; border:1px solid #fecaca; color:#b91c1c;
+    border-radius:9px; padding:9px 12px; font-size:12.5px; margin-top:9px;
+  }
+  .err.show { display:block; }
+
+  /* ---- key list ---- */
+  .list-head { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+  .list-head h2 { font-size:15px; font-weight:700; }
+  .list-count {
+    background:var(--navy); color:#fff; border-radius:20px; padding:2px 10px;
+    font-size:11px; font-weight:700;
+  }
+  .search { margin-left:auto; position:relative; }
+  .search input {
+    width:240px; border:1.5px solid var(--line); border-radius:9px;
+    padding:8px 12px 8px 30px; font-size:12.5px; outline:none; font-family:inherit;
+  }
+  .search input:focus { border-color:var(--navy); }
+  .search .si { position:absolute; left:9px; top:7px; font-size:13px; opacity:.5; }
+  .kl-grid {
+    display:grid; grid-template-columns:1.5fr 76px 1.6fr 82px 138px 34px;
+    gap:10px; align-items:center;
+  }
+  .kl-headrow {
+    font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase;
+    letter-spacing:.5px; padding:0 4px 8px;
+  }
+  .kl-row {
+    padding:9px 4px; border-top:1px solid var(--line); font-size:12px;
+  }
+  .kl-row .cust { font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .kl-row .dev { font-family:'Consolas',monospace; font-size:11px; color:var(--muted); }
+  .kl-row .date { color:var(--muted); }
+  .pill {
+    background:var(--navy); color:#fff; border-radius:6px; padding:2px 7px;
+    font-size:10px; font-weight:700; text-align:center; white-space:nowrap;
+  }
+  .pill.life { background:var(--amber); color:var(--navy); }
+  .exp-ok { color:var(--ink); font-weight:600; }
+  .exp-life { color:var(--ok); font-weight:700; }
+  .exp-bad { color:var(--err); font-weight:700; }
+  .kl-copy {
+    background:var(--line); border-radius:7px; padding:5px 0; font-size:12px;
+    color:var(--navy); text-align:center; cursor:pointer;
+  }
+  .kl-copy:hover { background:#dde3f3; }
+  .list-scroll { max-height:280px; overflow-y:auto; }
+  .list-empty { font-size:12.5px; color:var(--muted); padding:18px 4px; text-align:center; }
+  ::-webkit-scrollbar { width:9px; }
+  ::-webkit-scrollbar-thumb { background:#c8d0e4; border-radius:5px; }
+
+  /* ---- footer ---- */
+  .foot { text-align:center; padding:14px; font-size:11.5px; color:var(--muted); }
+  .foot a { color:var(--navy); font-weight:700; text-decoration:none; }
+  .foot a:hover { text-decoration:underline; }
+
+  .toast {
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(80px);
+    background:var(--ink); color:#fff; padding:11px 22px; border-radius:24px;
+    font-size:13px; font-weight:600; transition:transform .25s; z-index:50;
+  }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="logo">N</div>
+    <div>
+      <h1>Lumio Keygen</h1>
+      <div class="sub">License Activation Code Generator</div>
+    </div>
+    <div class="admin-tag">Admin Only</div>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <div class="step"><div class="num">1</div><h2>Customer Details</h2></div>
+      <label class="hint">Paste the Request Code the customer sent you from the app.</label>
+      <textarea id="req" placeholder="LUMIO-XXXX-XXXX-XXXX-XXXX" spellcheck="false"></textarea>
+      <div class="field">
+        <label class="hint">Customer name / note — used to find this key later in the list.</label>
+        <input class="txt" id="cust" placeholder="e.g. Rahim Traders / 01700000000" spellcheck="false" />
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="step"><div class="num">2</div><h2>Select License Tier</h2></div>
+      <div class="tiers" id="tiers">
+        <div class="tier" data-tier="1"><div class="t-name">1 Month</div><div class="t-days">30 days</div></div>
+        <div class="tier" data-tier="2"><div class="t-name">6 Months</div><div class="t-days">180 days</div></div>
+        <div class="tier" data-tier="3"><div class="t-name">1 Year</div><div class="t-days">365 days</div></div>
+        <div class="tier" data-tier="4"><div class="t-name">Lifetime</div><div class="t-days">Forever</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="step"><div class="num">3</div><h2>Generate Activation Code</h2></div>
+      <button class="btn btn-primary" id="gen" disabled>⚡ Generate Activation Code</button>
+      <div class="err" id="err"></div>
+
+      <div class="result" id="result">
+        <div class="result-head">✓ Activation Code generated — send it to the customer</div>
+        <div class="code-box"><div class="ac" id="ac"></div></div>
+        <div class="meta">
+          <div><span>Customer:</span> <b id="m-cust"></b></div>
+          <div><span>Tier:</span> <b id="m-tier"></b></div>
+          <div><span>Issued:</span> <b id="m-iss"></b></div>
+          <div><span>Expires:</span> <b id="m-exp"></b></div>
+        </div>
+        <div class="row">
+          <button class="btn btn-ghost" id="copy">📋 Copy Activation Code</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="list-head">
+        <h2>Generated Keys</h2>
+        <span class="list-count" id="count">0</span>
+        <div class="search">
+          <span class="si">🔍</span>
+          <input type="text" id="lsearch" placeholder="Search customer / device / tier…" spellcheck="false" />
+        </div>
+      </div>
+      <div class="kl-grid kl-headrow">
+        <div>Customer</div><div>Tier</div><div>Device</div><div>Issued</div><div>Expires</div><div></div>
+      </div>
+      <div class="list-scroll">
+        <div id="klist"></div>
+        <div class="list-empty" id="listEmpty">No keys generated yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    Copyright © 2026 <a href="#" id="tdLink">Tech Designer</a> — techdesigner.net &nbsp;·&nbsp; All rights reserved
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  var selectedTier = null;
+  var lastCode = '';
+  var $ = function (id) { return document.getElementById(id); };
+
+  function toast(msg) {
+    var t = $('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(t._t); t._t = setTimeout(function(){ t.classList.remove('show'); }, 2000);
+  }
+  function fmtDate(ms) {
+    if (ms == null) return 'Lifetime';
+    return new Date(ms).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
+      return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' })[c];
+    });
+  }
+  function refreshGenState() {
+    $('gen').disabled = !($('req').value.trim().length >= 8 && selectedTier);
+  }
+
+  $('tdLink').addEventListener('click', function (e) {
+    e.preventDefault(); window.keygen.openExternal('https://techdesigner.net/');
+  });
+
+  $('tiers').addEventListener('click', function (e) {
+    var t = e.target.closest('.tier'); if (!t) return;
+    [].forEach.call(document.querySelectorAll('.tier'), function(x){ x.classList.remove('active'); });
+    t.classList.add('active');
+    selectedTier = t.getAttribute('data-tier');
+    refreshGenState();
+  });
+  $('req').addEventListener('input', refreshGenState);
+
+  $('gen').addEventListener('click', async function () {
+    $('err').classList.remove('show');
+    var res = await window.keygen.generate($('req').value, selectedTier);
+    if (!res.ok) {
+      $('err').textContent = '⚠ ' + res.error;
+      $('err').classList.add('show');
+      $('result').classList.remove('show');
+      return;
+    }
+    var customer = $('cust').value.trim() || '(unnamed)';
+    lastCode = res.code;
+    $('ac').textContent = res.code;
+    $('m-cust').textContent = customer;
+    $('m-tier').textContent = res.tierLabel;
+    $('m-iss').textContent = fmtDate(res.issuedAt);
+    $('m-exp').textContent = fmtDate(res.expiresAt);
+    $('result').classList.add('show');
+    addKey({
+      customer: customer, tier: res.tierLabel, device: res.deviceId,
+      issued: res.issuedAt, expires: res.expiresAt, code: res.code,
+    });
+    $('cust').value = '';
+  });
+
+  $('copy').addEventListener('click', async function () {
+    await window.keygen.copy(lastCode);
+    toast('Activation Code copied ✓');
+  });
+
+  /* ---- key store (localStorage) ---- */
+  function loadKeys() { try { return JSON.parse(localStorage.getItem('lumio_keys') || '[]'); } catch(e){ return []; } }
+  function saveKeys(k) { localStorage.setItem('lumio_keys', JSON.stringify(k.slice(0, 600))); }
+  function addKey(rec) {
+    var k = loadKeys(); k.unshift(rec); saveKeys(k); renderList();
+  }
+
+  function renderList() {
+    var keys = loadKeys();
+    var q = $('lsearch').value.trim().toLowerCase();
+    var shown = keys.filter(function (k) {
+      if (!q) return true;
+      return (k.customer + ' ' + k.device + ' ' + k.tier).toLowerCase().indexOf(q) !== -1;
+    });
+    $('count').textContent = q ? (shown.length + ' / ' + keys.length) : keys.length;
+    $('listEmpty').style.display = shown.length ? 'none' : 'block';
+    $('listEmpty').textContent = keys.length ? 'No keys match your search.' : 'No keys generated yet.';
+
+    var now = Date.now();
+    $('klist').innerHTML = shown.map(function (k) {
+      var expCls = 'exp-ok', expTxt = fmtDate(k.expires);
+      if (k.expires == null) { expCls = 'exp-life'; expTxt = '∞ Lifetime'; }
+      else if (k.expires < now) { expCls = 'exp-bad'; expTxt = 'Expired · ' + fmtDate(k.expires); }
+      var idx = keys.indexOf(k);
+      return '<div class="kl-grid kl-row">' +
+        '<div class="cust" title="' + esc(k.customer) + '">' + esc(k.customer) + '</div>' +
+        '<div><span class="pill' + (k.expires == null ? ' life' : '') + '">' + esc(k.tier) + '</span></div>' +
+        '<div class="dev">' + esc(k.device) + '</div>' +
+        '<div class="date">' + fmtDate(k.issued) + '</div>' +
+        '<div class="' + expCls + '">' + expTxt + '</div>' +
+        '<div class="kl-copy" data-i="' + idx + '" title="Copy this Activation Code">📋</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  $('klist').addEventListener('click', async function (e) {
+    var c = e.target.closest('.kl-copy'); if (!c) return;
+    var rec = loadKeys()[parseInt(c.getAttribute('data-i'), 10)];
+    if (rec) { await window.keygen.copy(rec.code); toast('Activation Code copied ✓'); }
+  });
+  $('lsearch').addEventListener('input', renderList);
+
+  renderList();
+</script>
+</body>
+</html>

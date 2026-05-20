@@ -1,0 +1,32 @@
+{
+  "name": "lumio-keygen",
+  "productName": "Lumio Keygen",
+  "version": "1.0.0",
+  "description": "Admin-only license key generator for Lumio",
+  "author": "Tech Designer (https://techdesigner.net)",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win"
+  },
+  "build": {
+    "appId": "net.techdesigner.lumio.keygen",
+    "productName": "Lumio Keygen",
+    "copyright": "Copyright © 2026 Tech Designer — techdesigner.net",
+    "directories": { "output": "dist" },
+    "files": ["main.js", "preload.js", "keygen.html", "private-key.pem", "icon.ico", "package.json"],
+    "win": { "target": [{ "target": "nsis", "arch": ["x64"] }], "icon": "icon.ico" },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "Lumio Keygen"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  }
+}
