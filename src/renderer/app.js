@@ -43,6 +43,14 @@ function dirOf(p) {
   const i = Math.max(p.lastIndexOf('\\'), p.lastIndexOf('/'));
   return i > 0 ? p.slice(0, i) : p;
 }
+/* Fisher-Yates shuffle — randomises the effect order on every launch */
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+  }
+  return arr;
+}
 
 /* ============================ window chrome ========================== */
 $('winMin').onclick = () => nx.win.minimize();
@@ -56,7 +64,7 @@ async function boot() {
   $('verTag').textContent = 'v' + meta.version;
   $('fxCount').textContent = meta.presetCount;
 
-  allPresets = await nx.presets();
+  allPresets = shuffle(await nx.presets());
   renderGrid();
 
   /* licence summary */
@@ -254,7 +262,8 @@ function startRender() {
   rendering = true;
   updateRenderBtn();
 
-  const ids = allPresets.map((p) => p.id).filter((id) => selected.has(id));
+  /* render in the order the effects were selected (not the shuffled grid) */
+  const ids = Array.from(selected);
 
   /* build job rows (one per effect, processed as a chain) */
   const list = $('rmList');
