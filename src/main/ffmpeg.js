@@ -11,6 +11,7 @@
  */
 const { spawn } = require('child_process');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const paths = require('./paths');
 const presets = require('./presets');
@@ -149,57 +150,116 @@ function runJob(job, gpu, onProgress) {
   });
 }
 
-/* -------------------------------------------------------------- the batch */
+/* ---------------------------------------------------------- batch / chain */
+function uniquePath(p) {
+  if (!fs.existsSync(p)) return p;
+  const dir = path.dirname(p);
+  const ext = path.extname(p);
+  const base = path.basename(p, ext);
+  for (let i = 2; i < 1000; i++) {
+    const c = path.join(dir, base + ' (' + i + ')' + ext);
+    if (!fs.existsSync(c)) return c;
+  }
+  return p;
+}
+
+/* run one effect, with an automatic GPU -> CPU fallback */
+async function runJobWithFallback(preset, input, output, duration, gpu, send) {
+  const job = { preset: preset, input: input, output: output, duration: duration };
+  const onP = (pct) => send({ type: 'job', id: preset.id, status: 'rendering', pct: pct });
+  let res = await runJob(job, gpu, onP);
+  if (!res.ok && gpu.type !== 'cpu' && !cancelled) {
+    send({ type: 'job', id: preset.id, status: 'rendering', pct: 0, note: 'CPU fallback' });
+    res = await runJob(job, { type: 'cpu', enc: 'libx264' }, onP);
+  }
+  return res;
+}
+
+/* copy one file's video stream + another file's audio stream — no re-encode */
+function muxVideoAudio(videoFile, audioFile, out) {
+  return new Promise((resolve) => {
+    let proc;
+    try {
+      proc = spawn(paths.ffmpeg, [
+        '-y', '-hide_banner', '-loglevel', 'error',
+        '-i', videoFile, '-i', audioFile,
+        '-map', '0:v:0', '-map', '1:a:0', '-c', 'copy', '-shortest', out,
+      ]);
+    } catch (e) { return resolve(false); }
+    activeProcs.add(proc);
+    proc.on('error', () => { activeProcs.delete(proc); resolve(false); });
+    proc.on('close', (code) => { activeProcs.delete(proc); resolve(code === 0); });
+  });
+}
+
+/*
+ * Render the selected effects onto ONE video. Each effect is applied to the
+ * previous effect's result (a chain), so every chosen effect is stacked. The
+ * final clip keeps the audio of the first effect, so the soundtrack /
+ * background music is applied once — not layered on every pass.
+ */
 async function renderBatch(opts, send) {
   cancelled = false;
   const gpu = await detectGpu();
   const duration = await probeDuration(opts.videoPath);
+  const list = opts.presetIds.map((id) => presets.get(id)).filter(Boolean);
   const baseName = path.parse(opts.videoPath).name;
+  const finalOutput = uniquePath(path.join(opts.outputDir, sanitize(baseName + ' - Lumio') + '.mp4'));
 
-  const jobs = opts.presetIds
-    .map((id) => presets.get(id))
-    .filter(Boolean)
-    .map((p) => ({
-      preset: p,
-      input: opts.videoPath,
-      output: path.join(opts.outputDir, sanitize(baseName + ' - ' + p.id) + '.mp4'),
-      duration,
-    }));
+  send({ type: 'start', total: list.length, gpu: { type: gpu.type, label: gpu.label } });
 
-  send({ type: 'start', total: jobs.length, gpu: { type: gpu.type, label: gpu.label } });
-
-  const concurrency = Math.min(jobs.length, 2);
-  let next = 0, done = 0;
-  const results = [];
-
-  async function worker() {
-    while (next < jobs.length && !cancelled) {
-      const job = jobs[next++];
-      send({ type: 'job', id: job.preset.id, status: 'rendering', pct: 0 });
-
-      let res = await runJob(job, gpu, (pct) => {
-        send({ type: 'job', id: job.preset.id, status: 'rendering', pct });
-      });
-
-      // hardware-encode failure -> guaranteed CPU retry
-      if (!res.ok && gpu.type !== 'cpu' && !cancelled) {
-        send({ type: 'job', id: job.preset.id, status: 'rendering', pct: 0, note: 'CPU fallback' });
-        res = await runJob(job, { type: 'cpu', enc: 'libx264' }, (pct) => {
-          send({ type: 'job', id: job.preset.id, status: 'rendering', pct });
-        });
-      }
-
-      done++;
-      const status = res.ok ? 'done' : (cancelled ? 'cancelled' : 'failed');
-      results.push({ id: job.preset.id, ok: res.ok, output: job.output, error: res.error });
-      send({ type: 'job', id: job.preset.id, status, pct: res.ok ? 100 : 0, error: res.error });
-      send({ type: 'overall', done, total: jobs.length });
-    }
+  /* a single effect — render straight to the final file */
+  if (list.length === 1) {
+    const p = list[0];
+    send({ type: 'job', id: p.id, status: 'rendering', pct: 0 });
+    const res = await runJobWithFallback(p, opts.videoPath, finalOutput, duration, gpu, send);
+    send({ type: 'job', id: p.id, status: res.ok ? 'done' : 'failed', pct: res.ok ? 100 : 0, error: res.error });
+    send({ type: 'overall', done: 1, total: 1 });
+    send({ type: 'done', cancelled: cancelled, output: res.ok ? finalOutput : null, okCount: res.ok ? 1 : 0, total: 1 });
+    return { output: res.ok ? finalOutput : null };
   }
 
-  await Promise.all(Array.from({ length: concurrency }, worker));
-  send({ type: 'done', cancelled, results });
-  return { cancelled, results };
+  /* multiple effects — chain them into one video */
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lumio-'));
+  let current = opts.videoPath;
+  let firstGood = null;
+  let okCount = 0;
+
+  for (let i = 0; i < list.length && !cancelled; i++) {
+    const p = list[i];
+    const stepOut = path.join(tmp, 'step' + i + '.mp4');
+    send({ type: 'job', id: p.id, status: 'rendering', pct: 0 });
+    const res = await runJobWithFallback(p, current, stepOut, duration, gpu, send);
+    if (res.ok) {
+      okCount++;
+      current = stepOut;
+      if (!firstGood) firstGood = stepOut;
+      send({ type: 'job', id: p.id, status: 'done', pct: 100 });
+    } else {
+      send({ type: 'job', id: p.id, status: cancelled ? 'cancelled' : 'failed', pct: 0, error: res.error });
+    }
+    send({ type: 'overall', done: i + 1, total: list.length });
+  }
+
+  /* combine: stacked video (current) + the first effect's audio (firstGood) */
+  let finalOk = false;
+  if (okCount > 0 && !cancelled) {
+    try {
+      if (current === firstGood) {
+        fs.copyFileSync(current, finalOutput);                 // only one effect succeeded
+        finalOk = true;
+      } else if (await muxVideoAudio(current, firstGood, finalOutput)) {
+        finalOk = true;
+      } else {
+        fs.copyFileSync(current, finalOutput);                 // mux failed — keep chained file
+        finalOk = true;
+      }
+    } catch (e) { finalOk = false; }
+  }
+
+  try { fs.rmSync(tmp, { recursive: true, force: true }); } catch (e) {}
+  send({ type: 'done', cancelled: cancelled, output: finalOk ? finalOutput : null, okCount: okCount, total: list.length });
+  return { output: finalOk ? finalOutput : null };
 }
 
 function cancelAll() {

@@ -11,6 +11,7 @@ let searchText = '';
 let video = null;        // { path, name, info, thumb }
 let outputDir = null;
 let rendering = false;
+let finalOutputPath = null;
 
 /* ------------------------------ helpers ------------------------------ */
 function esc(s) {
@@ -146,7 +147,7 @@ function updateRenderBtn() {
   if (!video) sub = '⬆️ Upload a video first';
   else if (selected.size === 0) sub = '✓ Select at least one effect';
   else if (!outputDir) sub = '📁 Select an output folder';
-  else sub = video.name + ' → ' + selected.size + ' output videos';
+  else sub = video.name + ' → 1 combined video (' + selected.size + ' effect' + (selected.size > 1 ? 's' : '') + ')';
   $('selSub').textContent = sub;
 }
 
@@ -283,18 +284,27 @@ const offRender = nx.onRenderEvent((msg) => {
 
 function finishRender(msg) {
   rendering = false;
-  const ok = msg.results.filter((r) => r.ok).length;
-  const bad = msg.results.length - ok;
-  $('rmTitle').textContent = msg.cancelled ? 'Render cancelled' : 'Render complete ✓';
+  const made = !!msg.output;
+  const applied = msg.okCount || 0;
+  const total = msg.total || 0;
+  const skipped = total - applied;
+  finalOutputPath = msg.output || null;
+
+  $('rmTitle').textContent = msg.cancelled ? 'Render cancelled'
+    : (made ? 'Render complete ✓' : 'Render failed');
   $('rmResult').className = 'rm-result show';
-  $('rmResult').innerHTML =
-    '<span class="ok">' + ok + ' succeeded</span>' +
-    (bad ? '  ·  <span class="bad">' + bad + ' failed</span>' : '');
+  if (made) {
+    $('rmResult').innerHTML =
+      '<span class="ok">1 video created — ' + applied + ' effect' + (applied > 1 ? 's' : '') + ' applied</span>' +
+      (skipped > 0 ? '  ·  <span class="bad">' + skipped + ' skipped</span>' : '');
+  } else {
+    $('rmResult').innerHTML = '<span class="bad">No video produced</span>';
+  }
   $('cancelBtn').style.display = 'none';
   $('closeRmBtn').style.display = '';
-  $('openOutBtn').style.display = ok ? '' : 'none';
+  $('openOutBtn').style.display = made ? '' : 'none';
   updateRenderBtn();
-  if (!msg.cancelled && ok) toast('✓ ' + ok + ' video' + (ok > 1 ? 's' : '') + ' created');
+  if (!msg.cancelled && made) toast('✓ Video created');
 }
 
 $('cancelBtn').onclick = () => {
@@ -307,7 +317,10 @@ $('closeRmBtn').onclick = () => {
   $('cancelBtn').textContent = '⛔ Cancel';
   $('cancelBtn').disabled = false;
 };
-$('openOutBtn').onclick = () => nx.openPath(outputDir);
+$('openOutBtn').onclick = () => {
+  if (finalOutputPath) nx.showItem(finalOutputPath);
+  else if (outputDir) nx.openPath(outputDir);
+};
 
 /* ============================== about ================================ */
 function buildAbout(meta, st) {
