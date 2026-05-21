@@ -241,12 +241,15 @@ async function renderBatch(opts, send) {
     send({ type: 'overall', done: i + 1, total: list.length });
   }
 
-  /* combine: stacked video (current) + the first effect's audio (firstGood) */
+  /* combine: stacked video (current) + the first effect's audio (firstGood).
+     A Speed effect changes the clip length, so the first effect's audio would
+     no longer line up — in that case keep the final step's own audio. */
+  const hasSpeed = list.some((p) => p.category === 'SPEED');
   let finalOk = false;
   if (okCount > 0 && !cancelled) {
     try {
-      if (current === firstGood) {
-        fs.copyFileSync(current, finalOutput);                 // only one effect succeeded
+      if (current === firstGood || hasSpeed) {
+        fs.copyFileSync(current, finalOutput);                 // single effect, or speed-shifted timing
         finalOk = true;
       } else if (await muxVideoAudio(current, firstGood, finalOutput)) {
         finalOk = true;

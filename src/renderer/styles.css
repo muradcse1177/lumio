@@ -336,6 +336,10 @@ input, textarea { font-family:inherit; outline:none; }
 .tag.transform { background:#fdeccf; color:var(--amber-d); }
 .tag.repeat { background:#e6f4ec; color:var(--ok); }
 .tag.preload { background:#eae6f9; color:#6d28d9; }
+.tag.color { background:#fde8ef; color:#be185d; }
+.tag.stylize { background:#d9f3f0; color:#0f766e; }
+.tag.speed { background:#e0e7ff; color:#3730a3; }
+.tag.format { background:#e0f2fe; color:#0369a1; }
 .grid-empty {
   text-align:center; padding:60px 20px; color:var(--muted); font-size:13px;
 }
