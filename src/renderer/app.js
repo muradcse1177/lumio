@@ -10,6 +10,7 @@ let filter = 'all';
 let searchText = '';
 let video = null;        // { path, name, info, thumb }
 let outputDir = null;
+let audioPath = null;    // optional custom soundtrack
 let rendering = false;
 let finalOutputPath = null;
 
@@ -141,13 +142,18 @@ function updateSelInfo() {
   updateRenderBtn();
 }
 function updateRenderBtn() {
-  const ready = video && outputDir && selected.size > 0 && !rendering;
+  const ready = video && outputDir && (selected.size > 0 || audioPath) && !rendering;
   $('renderBtn').disabled = !ready;
-  let sub = 'Select a video and effects to render';
+  let sub;
   if (!video) sub = '⬆️ Upload a video first';
-  else if (selected.size === 0) sub = '✓ Select at least one effect';
+  else if (selected.size === 0 && !audioPath) sub = '✓ Select effects, or add an audio track';
   else if (!outputDir) sub = '📁 Select an output folder';
-  else sub = video.name + ' → 1 combined video (' + selected.size + ' effect' + (selected.size > 1 ? 's' : '') + ')';
+  else {
+    const parts = [];
+    if (selected.size > 0) parts.push(selected.size + ' effect' + (selected.size > 1 ? 's' : ''));
+    if (audioPath) parts.push('custom audio');
+    sub = video.name + '  →  1 video (' + parts.join(' + ') + ')';
+  }
   $('selSub').textContent = sub;
 }
 
@@ -210,31 +216,67 @@ $('pickOut').onclick = async () => {
   if (d) setOutputDir(d);
 };
 
+/* ============================ audio track ============================ */
+function setAudio(p) {
+  if (!p) return;
+  if (!/\.(mp3|wav|m4a|aac|ogg|flac|opus|wma)$/i.test(p)) {
+    toast('⚠ Not a supported audio file');
+    return;
+  }
+  audioPath = p;
+  $('audioName').textContent = p.split(/[\\/]/).pop();
+  $('audioChip').classList.add('show');
+  $('addAudio').style.display = 'none';
+  updateRenderBtn();
+}
+$('addAudio').onclick = async () => setAudio(await nx.pickAudio());
+$('clearAudio').onclick = () => {
+  audioPath = null;
+  $('audioChip').classList.remove('show');
+  $('addAudio').style.display = '';
+  updateRenderBtn();
+};
+const ab = $('addAudio');
+['dragenter', 'dragover'].forEach((ev) =>
+  ab.addEventListener(ev, (e) => { e.preventDefault(); ab.classList.add('drag'); }));
+['dragleave', 'drop'].forEach((ev) =>
+  ab.addEventListener(ev, (e) => { e.preventDefault(); ab.classList.remove('drag'); }));
+ab.addEventListener('drop', (e) => {
+  const f = e.dataTransfer.files[0];
+  if (f) setAudio(nx.pathForFile(f));
+});
+
 /* ============================== render =============================== */
 $('renderBtn').onclick = startRender;
 
 function startRender() {
-  if (rendering || !video || !outputDir || !selected.size) return;
+  if (rendering || !video || !outputDir || (!selected.size && !audioPath)) return;
   rendering = true;
   updateRenderBtn();
 
   const ids = allPresets.map((p) => p.id).filter((id) => selected.has(id));
 
-  /* build job rows */
+  /* build job rows (one per effect, processed as a chain) */
   const list = $('rmList');
-  list.innerHTML = ids.map((id) => {
-    const { label } = splitName(id);
-    return '<div class="job" id="job-' + cssId(id) + '" data-id="' + esc(id) + '">' +
-      '<div class="job-ico">•</div>' +
-      '<div class="job-main"><div class="job-name">' + esc(label) + '</div>' +
-      '<div class="job-bar"><i></i></div></div>' +
-      '<div class="job-pct">—</div></div>';
-  }).join('');
+  if (ids.length) {
+    list.innerHTML = ids.map((id) => {
+      const { label } = splitName(id);
+      return '<div class="job" id="job-' + cssId(id) + '" data-id="' + esc(id) + '">' +
+        '<div class="job-ico">•</div>' +
+        '<div class="job-main"><div class="job-name">' + esc(label) + '</div>' +
+        '<div class="job-bar"><i></i></div></div>' +
+        '<div class="job-pct">—</div></div>';
+    }).join('');
+  } else {
+    list.innerHTML = '<div class="job"><div class="job-ico">🎵</div>' +
+      '<div class="job-main"><div class="job-name">Replacing audio track</div>' +
+      '<div class="job-bar"><i></i></div></div><div class="job-pct">—</div></div>';
+  }
 
-  $('rmTitle').textContent = 'Rendering…';
+  $('rmTitle').textContent = ids.length ? 'Rendering…' : 'Replacing audio…';
   $('rmSub').textContent = video.name;
   $('rmBar').style.width = '0%';
-  $('rmDone').textContent = '0 / ' + ids.length + ' done';
+  $('rmDone').textContent = ids.length ? ('0 / ' + ids.length + ' done') : 'Processing…';
   $('rmPct').textContent = '0%';
   $('rmResult').className = 'rm-result';
   $('cancelBtn').style.display = '';
@@ -242,7 +284,7 @@ function startRender() {
   $('openOutBtn').style.display = 'none';
   $('renderOverlay').classList.add('show');
 
-  nx.render({ videoPath: video.path, presetIds: ids, outputDir: outputDir });
+  nx.render({ videoPath: video.path, presetIds: ids, outputDir: outputDir, audioPath: audioPath });
 }
 
 function cssId(id) {
@@ -294,9 +336,16 @@ function finishRender(msg) {
     : (made ? 'Render complete ✓' : 'Render failed');
   $('rmResult').className = 'rm-result show';
   if (made) {
-    $('rmResult').innerHTML =
-      '<span class="ok">1 video created — ' + applied + ' effect' + (applied > 1 ? 's' : '') + ' applied</span>' +
-      (skipped > 0 ? '  ·  <span class="bad">' + skipped + ' skipped</span>' : '');
+    if (total === 0) {
+      $('rmResult').innerHTML = '<span class="ok">1 video created — audio replaced</span>';
+    } else {
+      $('rmResult').innerHTML =
+        '<span class="ok">1 video created — ' + applied + ' effect' + (applied > 1 ? 's' : '') +
+        ' applied' + (audioPath ? ' + audio' : '') + '</span>' +
+        (skipped > 0 ? '  ·  <span class="bad">' + skipped + ' skipped</span>' : '');
+    }
+    $('rmBar').style.width = '100%';
+    $('rmPct').textContent = '100%';
   } else {
     $('rmResult').innerHTML = '<span class="bad">No video produced</span>';
   }

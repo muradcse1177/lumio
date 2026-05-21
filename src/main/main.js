@@ -124,6 +124,18 @@ ipcMain.handle('app:pickVideo', async () => {
   return r.canceled ? null : r.filePaths[0];
 });
 
+ipcMain.handle('app:pickAudio', async () => {
+  const r = await dialog.showOpenDialog(win, {
+    title: 'Select an audio track',
+    properties: ['openFile'],
+    filters: [
+      { name: 'Audio Files', extensions: ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac', 'opus', 'wma'] },
+      { name: 'All Files', extensions: ['*'] },
+    ],
+  });
+  return r.canceled ? null : r.filePaths[0];
+});
+
 ipcMain.handle('app:videoInfo', async (e, filePath) => {
   const [info, thumb] = await Promise.all([
     ffmpeg.probeInfo(filePath),

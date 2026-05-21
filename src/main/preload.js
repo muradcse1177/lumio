@@ -22,6 +22,7 @@ contextBridge.exposeInMainWorld('lumio', {
   presets: () => ipcRenderer.invoke('app:presets'),
   gpu: () => ipcRenderer.invoke('app:gpu'),
   pickVideo: () => ipcRenderer.invoke('app:pickVideo'),
+  pickAudio: () => ipcRenderer.invoke('app:pickAudio'),
   videoInfo: (filePath) => ipcRenderer.invoke('app:videoInfo', filePath),
   pickOutputDir: () => ipcRenderer.invoke('app:pickOutputDir'),
   render: (opts) => ipcRenderer.invoke('app:render', opts),

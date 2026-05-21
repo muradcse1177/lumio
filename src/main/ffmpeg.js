@@ -175,17 +175,20 @@ async function runJobWithFallback(preset, input, output, duration, gpu, send) {
   return res;
 }
 
-/* copy one file's video stream + another file's audio stream — no re-encode */
-function muxVideoAudio(videoFile, audioFile, out) {
+/* mux a video stream with a separate audio stream.
+   replace=true  -> user soundtrack: re-encode + pad/truncate to the video length
+   replace=false -> same-length internal audio: fast stream-copy */
+function muxVideoAudio(videoFile, audioFile, out, replace) {
   return new Promise((resolve) => {
+    const args = replace
+      ? ['-y', '-hide_banner', '-loglevel', 'error', '-i', videoFile, '-i', audioFile,
+         '-filter_complex', '[1:a]apad[a]', '-map', '0:v:0', '-map', '[a]',
+         '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-shortest', out]
+      : ['-y', '-hide_banner', '-loglevel', 'error', '-i', videoFile, '-i', audioFile,
+         '-map', '0:v:0', '-map', '1:a:0', '-c', 'copy', '-shortest', out];
     let proc;
-    try {
-      proc = spawn(paths.ffmpeg, [
-        '-y', '-hide_banner', '-loglevel', 'error',
-        '-i', videoFile, '-i', audioFile,
-        '-map', '0:v:0', '-map', '1:a:0', '-c', 'copy', '-shortest', out,
-      ]);
-    } catch (e) { return resolve(false); }
+    try { proc = spawn(paths.ffmpeg, args); }
+    catch (e) { return resolve(false); }
     activeProcs.add(proc);
     proc.on('error', () => { activeProcs.delete(proc); resolve(false); });
     proc.on('close', (code) => { activeProcs.delete(proc); resolve(code === 0); });
@@ -193,10 +196,13 @@ function muxVideoAudio(videoFile, audioFile, out) {
 }
 
 /*
- * Render the selected effects onto ONE video. Each effect is applied to the
- * previous effect's result (a chain), so every chosen effect is stacked. The
- * final clip keeps the audio of the first effect, so the soundtrack /
- * background music is applied once — not layered on every pass.
+ * Render the selected effects onto ONE video.
+ *  - Multiple effects are chained: each applied to the previous result.
+ *  - opts.audioPath (optional): the user's own track replaces the soundtrack.
+ *  - No effects + a custom track simply swaps the audio.
+ * Combined-clip audio: the custom track if given; otherwise the first effect's
+ * audio (so background music is not layered); the final step's own audio when
+ * a Speed/Audio effect has already changed it.
  */
 async function renderBatch(opts, send) {
   cancelled = false;
@@ -205,22 +211,11 @@ async function renderBatch(opts, send) {
   const list = opts.presetIds.map((id) => presets.get(id)).filter(Boolean);
   const baseName = path.parse(opts.videoPath).name;
   const finalOutput = uniquePath(path.join(opts.outputDir, sanitize(baseName + ' - Lumio') + '.mp4'));
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lumio-'));
 
   send({ type: 'start', total: list.length, gpu: { type: gpu.type, label: gpu.label } });
 
-  /* a single effect — render straight to the final file */
-  if (list.length === 1) {
-    const p = list[0];
-    send({ type: 'job', id: p.id, status: 'rendering', pct: 0 });
-    const res = await runJobWithFallback(p, opts.videoPath, finalOutput, duration, gpu, send);
-    send({ type: 'job', id: p.id, status: res.ok ? 'done' : 'failed', pct: res.ok ? 100 : 0, error: res.error });
-    send({ type: 'overall', done: 1, total: 1 });
-    send({ type: 'done', cancelled: cancelled, output: res.ok ? finalOutput : null, okCount: res.ok ? 1 : 0, total: 1 });
-    return { output: res.ok ? finalOutput : null };
-  }
-
-  /* multiple effects — chain them into one video */
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lumio-'));
+  /* chain the effects: each step renders onto the previous step's output */
   let current = opts.videoPath;
   let firstGood = null;
   let okCount = 0;
@@ -241,20 +236,24 @@ async function renderBatch(opts, send) {
     send({ type: 'overall', done: i + 1, total: list.length });
   }
 
-  /* combine: stacked video (current) + the first effect's audio (firstGood).
-     A Speed effect changes the clip length, so the first effect's audio would
-     no longer line up — in that case keep the final step's own audio. */
-  const hasSpeed = list.some((p) => p.category === 'SPEED');
+  /* the stacked video to keep (last good step, or the source when no effects) */
+  const videoResult = okCount > 0 ? current : opts.videoPath;
+  const valid = !cancelled && (okCount > 0 || (list.length === 0 && !!opts.audioPath));
+
   let finalOk = false;
-  if (okCount > 0 && !cancelled) {
+  if (valid) {
     try {
-      if (current === firstGood || hasSpeed) {
-        fs.copyFileSync(current, finalOutput);                 // single effect, or speed-shifted timing
+      const hasSpeedOrAudio = list.some((p) => p.category === 'SPEED' || p.category === 'AUDIO');
+      if (opts.audioPath) {
+        finalOk = await muxVideoAudio(videoResult, opts.audioPath, finalOutput, true);
+        if (!finalOk) { fs.copyFileSync(videoResult, finalOutput); finalOk = true; }
+      } else if (okCount <= 1 || hasSpeedOrAudio) {
+        fs.copyFileSync(videoResult, finalOutput);             // keep the clip's own audio
         finalOk = true;
-      } else if (await muxVideoAudio(current, firstGood, finalOutput)) {
-        finalOk = true;
+      } else if (await muxVideoAudio(videoResult, firstGood, finalOutput, false)) {
+        finalOk = true;                                        // first effect's audio — no music layering
       } else {
-        fs.copyFileSync(current, finalOutput);                 // mux failed — keep chained file
+        fs.copyFileSync(videoResult, finalOutput);
         finalOk = true;
       }
     } catch (e) { finalOk = false; }
